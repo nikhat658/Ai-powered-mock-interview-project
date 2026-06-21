@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntervAI Staging Matrix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .hidden-pane { display: none !important; }
+        body { background-color: #020617; color: #cbd5e1; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-purple-500/30">
+
+    <div id="view-auth" class="flex-1 flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-slate-900/60 border border-slate-800/80 rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
+            <div class="text-center mb-8">
+                <div class="w-12 h-12 bg-purple-600/20 border border-purple-500/40 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-purple-400"></i>
+                </div>
+                <h2 id="auth-title" class="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
+                <p id="auth-subtitle" class="text-sm text-slate-400 mt-1">Enter your credentials to enter the staging area</p>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="auth-name-group" class="space-y-1.5 hidden">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Profile Username</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                        <input type="text" id="auth-name" placeholder="John Doe" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Email Gateway Address</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                        <input type="email" id="auth-email" required placeholder="name@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Security Access Token</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                        <input type="password" id="auth-pass" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500 transition-colors">
+                    </div>
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-medium text-sm py-3 rounded-xl transition-all shadow-lg shadow-purple-950/20 flex items-center justify-center gap-2 mt-2">
+                    <span>Sign In</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+
+            <div class="text-center mt-6 pt-6 border-t border-slate-800/60 text-xs text-slate-400">
+                <span id="auth-toggle-msg">Don't have an account?</span>
+                <button id="auth-toggle-btn" onclick="toggleAuthMode()" class="text-purple-400 font-semibold hover:underline ml-1">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-app" class="flex-1 flex flex-col hidden-pane">
+        <header class="bg-slate-900/40 border-b border-slate-800/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="navigateTo('dashboard')">
+                    <div class="w-8 h-8 bg-gradient-to-tr from-purple-600 to-indigo-500 rounded-lg flex items-center justify-center shadow-md">
+                        <i data-lucide="terminal" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <span class="font-bold text-white tracking-tight text-lg">Interv<span class="text-purple-400">AI</span></span>
+                </div>
+                <nav class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-400">
+                    <button onclick="navigateTo('dashboard')" class="hover:text-slate-200 px-3 py-1.5 rounded-lg transition-colors">Dashboard</button>
+                    <button onclick="navigateTo('simulator')" class="hover:text-slate-200 px-3 py-1.5 rounded-lg transition-colors">Simulator Module</button>
+                </nav>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center gap-3 border-r border-slate-800 pr-4 text-xs font-mono">
+                    <div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-md text-amber-400">
+                        <i data-lucide="flame" class="w-3.5 h-3.5 fill-amber-500/20"></i>
+                        <span id="header-streak">1</span> Day Streak
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md text-purple-400">
+                        <i data-lucide="target" class="w-3.5 h-3.5"></i>
+                        <span id="header-avg">0%</span> Avg
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="text-right hidden xs:block">
+                        <div id="user-display-name" class="text-sm font-semibold text-slate-200 leading-none">Guest User</div>
+                        <span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Operator Tier</span>
+                    </div>
+                    <button onclick="handleSignOut()" class="w-8 h-8 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-400 hover:border-rose-950 transition-colors" title="Sign Out Ecosystem">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
+            
+            <div id="pane-dashboard" class="space-y-6 hidden-pane">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900/80 to-purple-950/20 border border-slate-800/60 p-6 rounded-2xl">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white tracking-tight">System Node Workspace</h1>
+                        <p class="text-sm text-slate-400 mt-1">Greetings <span id="welcome-name" class="text-purple-400 font-medium">Operator</span>. Select an action matrix framework path below to initialize tracking data loops.</p>
+                    </div>
+                    <button onclick="navigateTo('simulator')" class="bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-purple-950/30 flex items-center gap-2 transition-all self-start md:self-auto">
+                        <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+                        <span>Launch New Simulation Cycle</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-xl flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center border border-blue-500/20 text-blue-400"><i data-lucide="cpu"></i></div>
+                        <div><div id="dash-stat-count" class="text-xl font-bold text-white font-mono">0</div><div class="text-xs text-slate-500 font-medium">Telemetry Runs Verified</div></div>
+                    </div>
+                    <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-xl flex items-center gap-4">
+                        <div class="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center border border-amber-500/20 text-amber-400"><i data-lucide="zap"></i></div>
+                        <div><div id="dash-stat-streak" class="text-xl font-bold text-white font-mono">1 Day</div><div class="text-xs text-slate-500 font-medium">Activity Consistency Vector</div></div>
+                    </div>
+                    <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-xl flex items-center gap-4">
+                        <div class="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center border border-purple-500/20 text-purple-400"><i data-lucide="award"></i></div>
+                        <div><div id="dash-stat-high" class="text-xl font-bold text-white font-mono">--</div><div class="text-xs text-slate-500 font-medium">Peak Analytical Competency Evaluation</div></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-slate-900/30 border border-slate-800/60 rounded-xl p-5 lg:col-span-2 flex flex-col">
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4"></i> Performance Synthesis Vector (Last 7 Sessions)</h3>
+                        <div class="flex-1 min-h-[220px] flex items-end gap-3 px-2 pt-6 relative border-b border-l border-slate-800/80" id="chart-graph-wrapper">
+                            </div>
+                    </div>
+                    <div class="bg-slate-900/30 border border-slate-800/60 rounded-xl p-5 flex flex-col">
+                        <div class="flex items-center justify-between mb-4 border-b border-slate-800/60 pb-2">
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wider text-slate-400 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Runtime Trace Footprints</h3>
+                            <span id="dash-history-count" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded text-slate-500">0 items</span>
+                        </div>
+                        <div id="dash-history-list" class="flex-1 space-y-2.5 overflow-y-auto max-h-[235px] pr-1">
+                            </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider text-slate-400 mb-3">Instant Vector Profiles</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-xl hover:border-purple-500/40 transition-all group cursor-pointer" onclick="launchQuickInterview('Frontend Engineer', 'Junior')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-bold text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">UI Core Dev</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-600 group-hover:text-purple-400 transition-colors"></i>
+                            </div>
+                            <h4 class="font-semibold text-slate-200 group-hover:text-white">Frontend Architecture</h4>
+                            <p class="text-xs text-slate-500 mt-1">Target Assessment: Junior Engine Systems Baseline</p>
+                        </div>
+                        <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-xl hover:border-indigo-500/40 transition-all group cursor-pointer" onclick="launchQuickInterview('Frontend Engineer', 'Senior')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-bold text-indigo-400 font-mono bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Scale Engineering</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors"></i>
+                            </div>
+                            <h4 class="font-semibold text-slate-200 group-hover:text-white">Frontend Architecture</h4>
+                            <p class="text-xs text-slate-500 mt-1">Target Assessment: Senior Core Systems Scale Topology</p>
+                        </div>
+                        <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-xl hover:border-emerald-500/40 transition-all group cursor-pointer" onclick="launchQuickInterview('Product Manager', 'Mid')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-bold text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Product lifecycle</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-600 group-hover:text-emerald-400 transition-colors"></i>
+                            </div>
+                            <h4 class="font-semibold text-slate-200 group-hover:text-white">Product Strategy Map</h4>
+                            <p class="text-xs text-slate-500 mt-1">Target Assessment: Mid-Level Scope & Matrices Execution</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pane-simulator" class="grid grid-cols-1 lg:grid-cols-4 gap-6 hidden-pane">
+                
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400 border-b border-slate-800/60 pb-2">Simulation Constraints</h3>
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Target Domain Profile</label>
+                            <select id="role-select" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 transition-colors">
+                                <option value="Frontend Engineer">Frontend Engineer Architecture</option>
+                                <option value="Product Manager">Product Manager Map Matrix</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Competency Rank Layer</label>
+                            <div class="grid grid-cols-3 gap-1.5 text-xs font-medium">
+                                <button id="diff-Junior" onclick="setDifficulty('Junior')" class="diff-btn border border-purple-500 bg-purple-600/10 text-purple-300 py-2 rounded-lg transition-all active">Junior</button>
+                                <button id="diff-Mid" onclick="setDifficulty('Mid')" class="diff-btn border border-slate-800 hover:border-slate-700 py-2 rounded-lg transition-all">Mid</button>
+                                <button id="diff-Senior" onclick="setDifficulty('Senior')" class="diff-btn border border-slate-800 hover:border-slate-700 py-2 rounded-lg transition-all">Senior</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Evaluation Focus Vector</label>
+                            <select id="focus-select" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 transition-colors">
+                                <option value="Technical Breadth">Technical Architecture & Breadth Matrix</option>
+                                <option value="System Design Topology">System Layout & Design Scaling</option>
+                                <option value="Behavioral Alignment">Cross-Functional Leadership Matrix</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-2">
+                            <button id="start-btn" onclick="startInterview()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="play-circle" class="w-4 h-4"></i> Initialize Session Engine
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/20 border border-slate-800/50 rounded-2xl p-4 flex flex-col max-h-[280px]">
+                        <div class="flex items-center justify-between mb-2.5 border-b border-slate-800/40 pb-1.5">
+                            <h3 class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Local Cache Stack</h3>
+                            <span id="history-count" class="text-[9px] font-mono text-slate-600">0 recorded</span>
+                        </div>
+                        <div id="history-list" class="space-y-2 overflow-y-auto pr-1 flex-1 text-xs">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col h-[600px] overflow-hidden shadow-xl">
+                    <div class="px-4 py-3 bg-slate-950/60 border-b border-slate-800/80 flex items-center justify-between shrink-0">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div id="status-indicator" class="w-2.5 h-2.5 rounded-full bg-slate-500"></div>
+                            <div class="truncate">
+                                <h3 id="chat-title" class="text-xs font-bold text-white tracking-tight leading-tight truncate">Terminal Channel Dormant</h3>
+                                <p id="chat-subtitle" class="text-[10px] text-slate-500 font-medium truncate">Awaiting setup configuration sequence initialize...</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 font-mono text-xs">
+                            <span id="session-timer" class="bg-slate-950 px-2 py-1 rounded border border-slate-800 text-slate-400">00:00</span>
+                        </div>
+                    </div>
+
+                    <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-4 flex flex-col">
+                        <div id="chat-empty" class="m-auto text-center max-w-xs space-y-2">
+                            <i data-lucide="messages-square" class="w-8 h-8 text-slate-700 mx-auto"></i>
+                            <h4 class="text-xs font-semibold text-slate-400">Session Pipeline Standby</h4>
+                            <p class="text-[11px] text-slate-500 leading-normal">Configure requirements parameters inside the constraint interface array blocks to prompt generation algorithms.</p>
+                        </div>
+                    </div>
+
+                    <div id="typing-indicator" class="px-4 py-1.5 bg-slate-950/40 border-t border-slate-900 text-[10px] font-mono text-purple-400 flex items-center gap-1.5 hidden">
+                        <div class="flex items-center gap-0.5"><div class="w-1 h-1 rounded-full bg-purple-400 animate-bounce"></div><div class="w-1 h-1 rounded-full bg-purple-400 animate-bounce [animation-delay:0.2s]"></div><div class="w-1 h-1 rounded-full bg-purple-400 animate-bounce [animation-delay:0.4s]"></div></div>
+                        <span id="typing-text">AI Interviewer is writing...</span>
+                    </div>
+
+                    <div class="p-3 bg-slate-950/60 border-t border-slate-800/80 shrink-0">
+                        <form id="chat-input-form" onsubmit="submitAnswer(event)" class="flex gap-2">
+                            <input type="text" id="user-input" disabled placeholder="Compile response vector matrix logs..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            <button type="submit" id="send-btn" disabled class="bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-all shadow-md shrink-0"><i data-lucide="send" class="w-4 h-4"></i></button>
+                        </form>
+                        <div class="flex items-center justify-between mt-2 px-1 font-mono text-[9px] text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <button id="hint-btn" disabled onclick="provideHint()" class="hover:text-slate-300 flex items-center gap-0.5 transition-colors disabled:opacity-30 disabled:pointer-events-none"><i class="w-3 h-3" data-lucide="lightbulb"></i> Hint</button>
+                                <button id="skip-btn" disabled onclick="skipQuestion()" class="hover:text-slate-300 flex items-center gap-0.5 transition-colors disabled:opacity-30 disabled:pointer-events-none"><i class="w-3 h-3" data-lucide="fast-forward"></i> Bypass</button>
+                            </div>
+                            <button id="end-btn" disabled onclick="endInterview()" class="text-rose-500 hover:text-rose-400 font-semibold uppercase flex items-center gap-0.5 transition-colors disabled:opacity-30 disabled:pointer-events-none"><i class="w-3 h-3" data-lucide="stop-circle"></i> Terminate Run</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-1 bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between min-h-[400px] lg:h-[600px] shadow-xl">
+                    <div class="space-y-4 flex flex-col flex-1 overflow-hidden">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider text-slate-400 border-b border-slate-800/60 pb-2 shrink-0">Telemetry Grader Metrics</h3>
+                        
+                        <div class="flex flex-col items-center justify-center p-3 bg-slate-950/40 border border-slate-800/40 rounded-2xl shrink-0">
+                            <div class="relative w-24 h-24 flex items-center justify-center">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                    <path class="text-slate-800" stroke-width="2.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path id="score-ring" class="text-purple-500 transition-all duration-700 ease-out" stroke-dasharray="0, 100" stroke-width="2.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                </svg>
+                                <div class="absolute text-center">
+                                    <span id="score-text" class="text-2xl font-bold font-mono text-white leading-none">--</span>
+                                </div>
+                            </div>
+                            <div id="score-evaluation" class="text-center text-xs text-slate-400 mt-2 max-w-[200px] leading-snug font-medium">Awaiting responses to grade criteria</div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto pr-1 text-xs text-slate-400 flex flex-col items-center justify-center text-center leading-relaxed" id="feedback-content">
+                            <div id="feedback-empty">
+                                <i data-lucide="activity" class="w-8 h-8 text-slate-700 mb-2 mx-auto"></i>
+                                <p>Detailed analysis of strengths & weaknesses will populate as you complete answers.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global App Core States
+        let currentDifficulty = 'Junior';
+        let isInterviewActive = false;
+        let interviewTimer = null;
+        let totalSeconds = 0;
+        let currentQuestionIndex = 0;
+        let currentQuestionData = null;
+        let activeAuthMode = 'login'; // 'login' or 'signup'
+        
+        // Profile Tracking Master Cache Schema
+        let profileStats = {
+            authenticated: false,
+            user: { name: "Guest User", email: "" },
+            streak: 1,
+            history: []
+        };
+
+        // Simulated Local Question Vault Matrix
+        const questionMatrix = {
+            "Frontend Engineer": {
+                "Junior": [
+                    { q: "Can you explain the differences between let, const, and var in modern JavaScript?", hint: "Think about block scope, hoisting, and re-assignment allowances.", sample: "var is function-scoped and hoisted. let and const are block-scoped; const prevents re-assignment." },
+                    { q: "What is the Virtual DOM, and how does React use it to optimize rendering speed?", hint: "Focus on batching mutations and reconciliation comparisons.", sample: "The Virtual DOM is an in-memory representation of real DOM nodes. React syncs it via a diffing algorithm called reconciliation." }
+                ],
+                "Mid": [
+                    { q: "Describe closure in JavaScript and provide a common modern production use-case.", hint: "Think lexically encapsulated states or custom hooks primitives.", sample: "A closure is the combination of a function bundled with references to its surrounding state. Used for data privacy or state tracking." }
+                ],
+                "Senior": [
+                    { q: "How would you optimize an enterprise single-page application experiencing severe rendering bottlenecks due to deeply nested layouts?", hint: "Consider virtualization, lazy loading, debounced paint triggers, profiling tools.", sample: "Implement virtualization, code splitting via dynamic imports, use Memoization structural configs, and analyze traces via Chrome DevTools." }
+                ]
+            },
+            "Product Manager": {
+                "Mid": [
+                    { q: "How do you prioritize your product roadmap when balancing aggressive engineering technical debt against direct stakeholder feature requests?", hint: "Think frameworks like RICE or Kano modeling matrices.", sample: "I utilize the RICE framework alongside engineering metrics to quantify long-term platform velocity losses against market window gains." }
+                ]
+            }
+        };
+
+        const genericQuestions = [
+            { q: "Can you discuss an architecture or systemic workflow challenge you navigated recently? What were the primary performance trade-offs?", hint: "Elaborate on operational constraints, scalability criteria, and measurable resolutions.", sample: "I broke down a legacy stack block using decoupling principles, optimizing bottleneck pathways to yield efficiency gains." },
+            { q: "How do you handle disagreement with senior cross-functional architectural decisions or product definitions?", hint: "Emphasize data-informed reasoning, constructive testing protocols, and collaborative alignment metrics.", sample: "I establish structured alignment sessions backstopped by telemetry benchmarks or proof-of-concept indicators." }
+        ];
+
+        // Initialization Bootstrapping Engine
+        window.addEventListener('DOMContentLoaded', () => {
+            loadProfileData();
+            lucide.createIcons();
+        });
+
+        // VIEW NAVIGATION CONTROL ENGINE
+        function navigateTo(viewName) {
+            const authView = document.getElementById('view-auth');
+            const appView = document.getElementById('view-app');
+            const paneDashboard = document.getElementById('pane-dashboard');
+            const paneSimulator = document.getElementById('pane-simulator');
+
+            if (viewName === 'auth') {
+                authView.classList.remove('hidden-pane');
+                appView.classList.add('hidden-pane');
+                return;
+            }
+
+            authView.classList.add('hidden-pane');
+            appView.classList.remove('hidden-pane');
+
+            if (viewName === 'dashboard') {
+                paneDashboard.classList.remove('hidden-pane');
+                paneSimulator.classList.add('hidden-pane');
+                if (isInterviewActive) endInterview();
+                renderDashboard();
+            } else if (viewName === 'simulator') {
+                paneDashboard.classList.add('hidden-pane');
+                paneSimulator.classList.remove('hidden-pane');
+                renderSimulatorHistory();
+            }
+            lucide.createIcons();
+        }
+
+        // AUTHENTICATION SUBSYSTEM INTERFACES
+        function toggleAuthMode() {
+            const title = document.getElementById('auth-title');
+            const subtitle = document.getElementById('auth-subtitle');
+            const nameGroup = document.getElementById('auth-name-group');
+            const submitBtnSpan = document.querySelector('#auth-submit-btn span');
+            const toggleMsg = document.getElementById('auth-toggle-msg');
+            const toggleBtn = document.getElementById('auth-toggle-btn');
+
+            if (activeAuthMode === 'login') {
+                activeAuthMode = 'signup';
+                title.textContent = "Create Account";
+                subtitle.textContent = "Sign up below to access the simulation environment";
+                nameGroup.classList.remove('hidden');
+                document.getElementById('auth-name').required = true;
+                submitBtnSpan.textContent = "Sign Up";
+                toggleMsg.textContent = "Already have an account?";
+                toggleBtn.textContent = "Sign In";
+            } else {
+                activeAuthMode = 'login';
+                title.textContent = "Welcome Back";
+                subtitle.textContent = "Enter your credentials to enter the staging area";
+                nameGroup.classList.add('hidden');
+                document.getElementById('auth-name').required = false;
+                submitBtnSpan.textContent = "Sign In";
+                toggleMsg.textContent = "Don't have an account?";
+                toggleBtn.textContent = "Create Account";
+            }
+            lucide.createIcons();
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault(); // Prevents manual form submission browser reload loops
+            const email = document.getElementById('auth-email').value;
+            const nameInput = document.getElementById('auth-name').value;
+            
+            profileStats.authenticated = true;
+            profileStats.user.email = email;
+            profileStats.user.name = (activeAuthMode === 'signup' && nameInput) ? nameInput : email.split('@')[0];
+            
+            saveProfileData();
+            updateHeaderUI();
+            navigateTo('dashboard');
+        }
+
+        function handleSignOut() {
+            profileStats.authenticated = false;
+            saveProfileData();
+            navigateTo('auth');
+        }
+
+        // WORKSPACE & PARAMETER PROFILE PERSISTENCE
+        function saveProfileData() {
+            localStorage.setItem('intervai_profile_cache', JSON.stringify(profileStats));
+        }
+
+        function loadProfileData() {
+            const cached = localStorage.getItem('intervai_profile_cache');
+            if (cached) {
+                try {
+                    profileStats = JSON.parse(cached);
+                } catch (e) {
+                    console.error("Malformed profile matrix cache resets.");
+                }
+            }
+            if (profileStats.authenticated) {
+                updateHeaderUI();
+                navigateTo('dashboard');
+            } else {
+                navigateTo('auth');
+            }
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('user-display-name').textContent = profileStats.user.name;
+            document.getElementById('welcome-name').textContent = profileStats.user.name;
+            document.getElementById('header-streak').textContent = profileStats.streak;
+            
+            const totalSessions = profileStats.history.length;
+            const avgScore = totalSessions > 0 
+                ? Math.round(profileStats.history.reduce((sum, item) => sum + item.score, 0) / totalSessions) 
+                : 0;
+            
+            document.getElementById('header-avg').textContent = `${avgScore}%`;
+        }
+
+        // DASHBOARD TRACK LOGS & TELEMETRY RENDERING
+        function renderDashboard() {
+            updateHeaderUI();
+            const totalSessions = profileStats.history.length;
+            document.getElementById('dash-stat-count').textContent = totalSessions;
+            document.getElementById('dash-stat-streak').textContent = `${profileStats.streak} Day${profileStats.streak !== 1 ? 's' : ''}`;
+            
+            const highestScore = totalSessions > 0 
+                ? Math.max(...profileStats.history.map(h => h.score)) 
+                : null;
+            document.getElementById('dash-stat-high').textContent = highestScore !== null ? `${highestScore}%` : '--';
+
+            const listContainer = document.getElementById('dash-history-list');
+            document.getElementById('dash-history-count').textContent = `${totalSessions} items`;
+            
+            if (totalSessions === 0) {
+                listContainer.innerHTML = `<div class="text-center py-8 text-slate-600">No session items logged yet.</div>`;
+            } else {
+                listContainer.innerHTML = [...profileStats.history].reverse().map(item => `
+                    <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
+                        <div>
+                            <div class="font-semibold text-slate-200 text-xs sm:text-sm">${item.role} (${item.difficulty})</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">${item.date} • ${item.duration}</div>
+                        </div>
+                        <div class="font-mono font-bold text-xs sm:text-sm ${item.score >= 75 ? 'text-emerald-400' : item.score >= 50 ? 'text-amber-400' : 'text-rose-400'} bg-slate-950 px-2 py-1 rounded border border-slate-800">${item.score}%</div>
+                    </div>
+                `).join('');
+            }
+            renderPerformanceGraph();
+        }
+
+        function renderPerformanceGraph() {
+            const wrapper = document.getElementById('chart-graph-wrapper');
+            const dataset = profileStats.history.slice(-7);
+            
+            if (dataset.length === 0) {
+                wrapper.innerHTML = `<div class="absolute inset-0 flex items-center justify-center text-xs text-slate-600">Data pipelines map array vacant</div>`;
+                return;
+            }
+
+            wrapper.innerHTML = dataset.map(item => {
+                const heightPercentage = item.score;
+                return `
+                    <div class="flex-1 flex flex-col items-center h-full justify-end group relative">
+                        <div class="absolute -top-6 bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-mono z-10">${item.score}%</div>
+                        <div class="w-full bg-gradient-to-t from-purple-600/40 to-indigo-500 rounded-t-md transition-all duration-500 hover:from-purple-500 hover:to-indigo-400" style="height: ${Math.max(heightPercentage, 10)}%"></div>
+                        <span class="text-[9px] text-slate-500 truncate w-full text-center mt-2 font-mono">${item.date.split(',')[0]}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // INTERVIEW CORE LOOPS & SIMULATION RUNTIME
+        function setDifficulty(diff) {
+            currentDifficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(btn => btn.className = 'diff-btn border border-slate-800 hover:border-slate-700 py-2 rounded-lg transition-all');
+            const activeBtn = document.getElementById(`diff-${diff}`);
+            activeBtn.className = 'diff-btn border border-purple-500 bg-purple-600/10 text-purple-300 py-2 rounded-lg transition-all active';
+        }
+
+        function launchQuickInterview(role, diff) {
+            navigateTo('simulator');
+            document.getElementById('role-select').value = role;
+            setDifficulty(diff);
+            startInterview();
+        }
+
+        function renderSimulatorHistory() {
+            const listContainer = document.getElementById('history-list');
+            document.getElementById('history-count').textContent = `${profileStats.history.length} recorded`;
+            
+            if (profileStats.history.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-8 text-slate-600">No session footprints.</div>`;
+            } else {
+                listContainer.innerHTML = [...profileStats.history].reverse().map(item => `
+                    <div class="p-2.5 bg-slate-900/40 border border-slate-800/60 rounded-xl flex items-center justify-between">
+                        <div class="truncate pr-2">
+                            <span class="font-medium text-slate-300 block truncate">${item.role}</span>
+                            <span class="text-[10px] text-slate-500 font-mono">${item.difficulty} • ${item.score}%</span>
+                        </div>
+                        <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0 text-purple-500/60"></i>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            }
+        }
+
+        function startInterview() {
+            if (isInterviewActive) return;
+            
+            isInterviewActive = true;
+            currentQuestionIndex = 0;
+            totalSeconds = 0;
+            
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('role-select').disabled = true;
+            document.querySelectorAll('.diff-btn').forEach(b => b.disabled = true);
+            document.getElementById('focus-select').disabled = true;
+            
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('skip-btn').disabled = false;
+            document.getElementById('end-btn').disabled = false;
+            document.getElementById('user-input').disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            
+            document.getElementById('status-indicator').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+            document.getElementById('chat-title').textContent = `${document.getElementById('role-select').value} Simulation`;
+            document.getElementById('chat-subtitle').textContent = `Focus: ${document.getElementById('focus-select').value}`;
+            
+            document.getElementById('chat-box').innerHTML = '';
+            resetFeedbackSidebar();
+
+            interviewTimer = setInterval(() => {
+                totalSeconds++;
+                const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+                const secs = String(totalSeconds % 60).padStart(2, '0');
+                document.getElementById('session-timer').textContent = `${mins}:${secs}`;
+            }, 1000);
+
+            nextQuestionStage();
+        }
+
+        function nextQuestionStage() {
+            const role = document.getElementById('role-select').value;
+            const pool = (questionMatrix[role] && questionMatrix[role][currentDifficulty]) || genericQuestions;
+            
+            if (currentQuestionIndex >= pool.length) {
+                const fallbackIndex = currentQuestionIndex - pool.length;
+                if (fallbackIndex >= genericQuestions.length) {
+                    endInterview();
+                    return;
+                }
+                currentQuestionData = genericQuestions[fallbackIndex];
+            } else {
+                currentQuestionData = pool[currentQuestionIndex];
+            }
+
+            showTypingIndicator(true);
+            setTimeout(() => {
+                showTypingIndicator(false);
+                appendChatMessage('interviewer', currentQuestionData.q);
+                currentQuestionIndex++;
+            }, 1200);
+        }
+
+        function provideHint() {
+            if (!isInterviewActive || !currentQuestionData) return;
+            appendChatMessage('system', `💡 **Hint Configuration Matrix:** ${currentQuestionData.hint}`);
+            document.getElementById('hint-btn').disabled = true;
+        }
+
+        function skipQuestion() {
+            if (!isInterviewActive) return;
+            appendChatMessage('system', "⏩ Current matrix question bypassed by user command vector.");
+            document.getElementById('hint-btn').disabled = false;
+            nextQuestionStage();
+        }
+
+        function endInterview() {
+            if (!isInterviewActive) return;
+            
+            clearInterval(interviewTimer);
+            isInterviewActive = false;
+            
+            const finalScoreElement = document.getElementById('score-text');
+            const scoreVal = finalScoreElement.textContent === '--' ? 0 : parseInt(finalScoreElement.textContent);
+            
+            const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+            const secs = String(totalSeconds % 60).padStart(2, '0');
+            const durationStr = `${mins}:${secs}`;
+
+            const sessionResult = {
+                role: document.getElementById('role-select').value,
+                difficulty: currentDifficulty,
+                date: new Date().toLocaleDateString(undefined, {month: 'short', day: 'numeric'}),
+                duration: durationStr,
+                score: scoreVal === 0 ? Math.floor(Math.random() * 30) + 50 : scoreVal
+            };
+            
+            profileStats.history.push(sessionResult);
+            saveProfileData();
+
+            appendChatMessage('system', `🏁 **Simulation Matrix Cycle Complete.** Final Evaluation Grade: **${sessionResult.score}%** Compiled.`);
+
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('role-select').disabled = false;
+            document.querySelectorAll('.diff-btn').forEach(b => b.disabled = false);
+            document.getElementById('focus-select').disabled = false;
+            
+            document.getElementById('hint-btn').disabled = true;
+            document.getElementById('skip-btn').disabled = true;
+            document.getElementById('end-btn').disabled = true;
+            document.getElementById('user-input').disabled = true;
+            document.getElementById('user-input').value = '';
+            document.getElementById('send-btn').disabled = true;
+            
+            document.getElementById('status-indicator').className = "w-2.5 h-2.5 rounded-full bg-slate-500";
+            renderSimulatorHistory();
+        }
+
+        function submitAnswer(e) {
+            e.preventDefault();
+            const inputField = document.getElementById('user-input');
+            const text = inputField.value.trim();
+            if (!text || !isInterviewActive) return;
+
+            appendChatMessage('candidate', text);
+            inputField.value = '';
+            
+            showTypingIndicator(true, "Processing Evaluation Grader Vectors...");
+            
+            setTimeout(() => {
+                showTypingIndicator(false);
+                const score = evaluateHeuristicScore(text, currentQuestionData.sample);
+                updateActiveScoreDisplay(score);
+                generateLiveFeedbackMap(score, text);
+
+                document.getElementById('hint-btn').disabled = false;
+                nextQuestionStage();
+            }, 1500);
+        }
+
+        // EVALUATION HEURISTICS ENGINE
+        function evaluateHeuristicScore(userAns, sampleAns) {
+            const userWords = new Set(userAns.toLowerCase().match(/\b\w+\b/g) || []);
+            const sampleWords = sampleAns.toLowerCase().match(/\b\w+\b/g) || [];
+            if (sampleWords.length === 0) return 50;
+            
+            let matches = 0;
+            sampleWords.forEach(w => { if (userWords.has(w)) matches++; });
+            
+            const ratio = matches / sampleWords.length;
+            return Math.min(Math.round(50 + (ratio * 50) + (Math.random() * 10)), 100);
+        }
+
+        function updateActiveScoreDisplay(targetScore) {
+            document.getElementById('score-text').textContent = targetScore;
+            document.getElementById('score-ring').setAttribute('stroke-dasharray', `${targetScore}, 100`);
+
+            const evaluationText = document.getElementById('score-evaluation');
+            if (targetScore >= 85) {
+                evaluationText.textContent = "Architectural Vector Alignment: Optimal Tier";
+                evaluationText.className = "text-xs text-emerald-400 max-w-[200px]";
+            } else if (targetScore >= 70) {
+                evaluationText.textContent = "Competent Synthesis Path Identified.";
+                evaluationText.className = "text-xs text-indigo-400 max-w-[200px]";
+            } else {
+                evaluationText.textContent = "Information Gaps Evaluated in Verification Step.";
+                evaluationText.className = "text-xs text-amber-400 max-w-[200px]";
+            }
+        }
+
+        function generateLiveFeedbackMap(score, response) {
+            const container = document.getElementById('feedback-content');
+            let structuralStrengths = "Structured execution stream configuration.";
+            let developmentalGaps = "Expand operational context models or specific profiling matrix tracers.";
+            
+            if (score >= 80) {
+                structuralStrengths = "Clear concept parsing, concise deployment of key terminal vocabularies.";
+                developmentalGaps = "Include direct production-tier trace metrics or system exceptions configurations.";
+            } else if (score < 65) {
+                structuralStrengths = "Basic introductory definitions successfully established.";
+                developmentalGaps = "Core lexical architecture is shallow. Review sample references structures.";
+            }
+
+            container.innerHTML = `
+                <div class="w-full text-left space-y-3.5">
+                    <div class="bg-emerald-950/20 border border-emerald-900/40 p-3 rounded-xl">
+                        <h4 class="font-bold text-emerald-400 uppercase tracking-wider text-[10px] mb-1 flex items-center gap-1">
+                            <i data-lucide="check" class="w-3 h-3"></i> Core Strength Vector
+                        </h4>
+                        <p class="text-slate-300 leading-normal">${structuralStrengths}</p>
+                    </div>
+                    <div class="bg-amber-950/20 border border-amber-900/40 p-3 rounded-xl">
+                        <h4 class="font-bold text-amber-400 uppercase tracking-wider text-[10px] mb-1 flex items-center gap-1">
+                            <i data-lucide="alert-triangle" class="w-3 h-3"></i> Growth Structural Gap
+                        </h4>
+                        <p class="text-slate-300 leading-normal">${developmentalGaps}</p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function resetFeedbackSidebar() {
+            document.getElementById('score-text').textContent = '--';
+            document.getElementById('score-ring').setAttribute('stroke-dasharray', '0, 100');
+            document.getElementById('score-evaluation').textContent = "Awaiting responses to grade criteria";
+            document.getElementById('score-evaluation').className = "text-xs text-slate-400 max-w-[200px]";
+            document.getElementById('feedback-content').innerHTML = `
+                <div id="feedback-empty">
+                    <i data-lucide="activity" class="w-8 h-8 text-slate-700 mb-2 mx-auto"></i>
+                    <p>Detailed analysis of strengths & weaknesses will populate as you complete answers.</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // TEXT INTERFACE MANIPULATIONS
+        function appendChatMessage(sender, message) {
+            const chatBox = document.getElementById('chat-box');
+            const emptyState = document.getElementById('chat-empty');
+            if (emptyState) emptyState.remove();
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex w-full ${sender === 'candidate' ? 'justify-end' : 'justify-start'}`;
+
+            let contentHTML = '';
+            if (sender === 'interviewer') {
+                contentHTML = `
+                    <div class="flex gap-3 max-w-[85%]">
+                        <div class="w-8 h-8 bg-purple-600 rounded-xl text-white flex items-center justify-center text-xs shadow-md shrink-0">AI</div>
+                        <div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-2xl rounded-tl-none text-sm text-slate-200 shadow-sm leading-relaxed">${message}</div>
+                    </div>
+                `;
+            } else if (sender === 'candidate') {
+                contentHTML = `
+                    <div class="bg-purple-600 text-white px-4 py-3 rounded-2xl rounded-tr-none text-sm max-w-[85%] shadow-md shadow-purple-950/10 leading-relaxed">${message}</div>
+                `;
+            } else {
+                contentHTML = `
+                    <div class="w-full bg-slate-950/60 border border-slate-900 rounded-xl px-4 py-2.5 text-xs text-slate-400 flex items-start gap-2 max-w-full">
+                        <div class="mt-0.5">${message}</div>
+                    </div>
+                `;
+            }
+
+            wrapper.innerHTML = contentHTML;
+            chatBox.appendChild(wrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTypingIndicator(show, customText = "AI Interviewer is writing...") {
+            const indicator = document.getElementById('typing-indicator');
+            document.getElementById('typing-text').textContent = customText;
+            if (show) {
+                indicator.classList.remove('hidden');
+            } else {
+                indicator.classList.add('hidden');
+            }
+            const chatBox = document.getElementById('chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
